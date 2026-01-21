@@ -3,6 +3,7 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import { Server } from 'socket.io';
 import { createServer } from 'http';
+import authRoutes from './routes/auth.routes';
 
 dotenv.config();
 
@@ -28,9 +29,12 @@ app.use((req: Request, res: Response, next: NextFunction) => {
   next();
 });
 
+// API Routes
+app.use('/api/auth', authRoutes);
+
 // Hello World endpoint
 app.get('/', (req: Request, res: Response) => {
-  res.json({ 
+  res.json({
     message: 'Hello World! Xelma Backend is running',
     timestamp: new Date().toISOString(),
     status: 'OK'

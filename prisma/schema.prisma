@@ -7,11 +7,32 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// Example model - customize as needed
+// User model for wallet-based authentication
 model User {
-  id        String   @id @default(uuid())
-  email     String   @unique
-  name      String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id              String            @id @default(uuid())
+  walletAddress   String            @unique
+  publicKey       String
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+  lastLoginAt     DateTime?
+  authChallenges  AuthChallenge[]
+
+  @@index([walletAddress])
+}
+
+// Auth challenge model for replay protection
+model AuthChallenge {
+  id          String    @id @default(uuid())
+  userId      String?
+  user        User?     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  challenge   String    @unique
+  walletAddress String
+  createdAt   DateTime  @default(now())
+  expiresAt   DateTime
+  usedAt      DateTime?
+  isUsed      Boolean   @default(false)
+
+  @@index([challenge])
+  @@index([walletAddress])
+  @@index([expiresAt])
 }
