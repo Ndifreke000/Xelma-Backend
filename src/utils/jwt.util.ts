@@ -17,7 +17,7 @@ export function generateToken(userId: string, walletAddress: string): string {
   };
 
   return jwt.sign(payload, JWT_SECRET, {
-    expiresIn: JWT_EXPIRY,
+    expiresIn: JWT_EXPIRY as any,
   });
 }
 
