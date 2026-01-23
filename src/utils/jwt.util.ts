@@ -1,4 +1,4 @@
-import jwt, { SignOptions } from 'jsonwebtoken';
+import jwt from 'jsonwebtoken';
 import { JwtPayload } from '../types/auth.types';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-production';
@@ -16,11 +16,9 @@ export function generateToken(userId: string, walletAddress: string): string {
     walletAddress,
   };
 
-  const options: SignOptions = {
-    expiresIn: JWT_EXPIRY,
-  } as SignOptions;
-
-  return jwt.sign(payload, JWT_SECRET, options);
+  return jwt.sign(payload, JWT_SECRET, {
+    expiresIn: JWT_EXPIRY as any,
+  });
 }
 
 /**
