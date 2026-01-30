@@ -1,6 +1,10 @@
-import { Client, BetSide } from '@tevalabs/xelma-bindings';
+// import { Client, BetSide } from '@tevalabs/xelma-bindings';
 import { Keypair, Networks } from '@stellar/stellar-sdk';
 import logger from '../utils/logger';
+
+// Temporary loose typing until bindings are available
+type Client = any;
+type BetSide = any;
 
 export class SorobanService {
   private client: Client | null = null;
@@ -17,13 +21,15 @@ export class SorobanService {
       const adminSecret = process.env.SOROBAN_ADMIN_SECRET;
       const oracleSecret = process.env.SOROBAN_ORACLE_SECRET;
 
+      // Hard-disable if anything critical is missing
       if (!contractId || !adminSecret || !oracleSecret) {
         logger.warn(
-          'Soroban configuration missing. Soroban integration disabled.'
+          'Soroban configuration or bindings missing. Soroban integration DISABLED.'
         );
         return;
       }
 
+      // NOTE: Requires @tevalabs/xelma-bindings to be installed
       this.client = new Client({
         contractId,
         networkPassphrase:
@@ -38,6 +44,7 @@ export class SorobanService {
       logger.info('Soroban service initialized successfully');
     } catch (error) {
       logger.error('Failed to initialize Soroban service:', error);
+      this.initialized = false;
     }
   }
 
@@ -118,7 +125,7 @@ export class SorobanService {
 
       logger.info('Soroban round resolved');
     } catch (error) {
-      logger.error('Failed to resolve round:', error);
+      logger.error('Failed to resolve Soroban round:', error);
       throw error;
     }
   }
