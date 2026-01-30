@@ -4,6 +4,7 @@ import dotenv from 'dotenv';
 import { Server } from 'socket.io';
 import { createServer } from 'http';
 import authRoutes from './routes/auth.routes';
+import roundRoutes from './routes/round.routes';
 import roundsRoutes from './routes/rounds.routes';
 import predictionsRoutes from './routes/predictions.routes';
 import educationRoutes from './routes/education.routes';
