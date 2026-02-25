@@ -1,4 +1,4 @@
-import cron from "node-cron";
+import cron, { ScheduledTask } from "node-cron";
 import { PrismaClient } from "@prisma/client";
 import resolutionService from "./resolution.service";
 import notificationService from "./notification.service";
@@ -8,6 +8,8 @@ import logger from "../utils/logger";
 const prisma = new PrismaClient();
 
 class SchedulerService {
+  private cronTasks: ScheduledTask[] = [];
+
   /**
    * Start the scheduler
    */
@@ -30,15 +32,30 @@ class SchedulerService {
       `Starting auto-resolution scheduler (interval: ${intervalSeconds}s)`,
     );
 
-    cron.schedule(cronExpression, async () => {
-      await this.autoResolveRounds();
-    });
+    this.cronTasks.push(
+      cron.schedule(cronExpression, async () => {
+        await this.autoResolveRounds();
+      }),
+    );
 
     // Schedule notification cleanup: Run daily at 2 AM
     logger.info("Starting notification cleanup scheduler (daily at 2:00 AM)");
-    cron.schedule("0 2 * * *", async () => {
-      await this.cleanupOldNotifications();
-    });
+    this.cronTasks.push(
+      cron.schedule("0 2 * * *", async () => {
+        await this.cleanupOldNotifications();
+      }),
+    );
+  }
+
+  /**
+   * Stop all scheduled tasks
+   */
+  stop(): void {
+    for (const task of this.cronTasks) {
+      task.stop();
+    }
+    this.cronTasks = [];
+    logger.info("Scheduler service stopped");
   }
 
   /**

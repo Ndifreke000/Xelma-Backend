@@ -1,10 +1,12 @@
-import cron from "node-cron";
+import cron, { ScheduledTask } from "node-cron";
 import roundService from "./round.service";
 import priceOracle from "./oracle";
 import logger from "../utils/logger";
 import { prisma } from "../lib/prisma";
 
 class RoundSchedulerService {
+  private cronTasks: ScheduledTask[] = [];
+
   start(): void {
     if (process.env.ROUND_SCHEDULER_ENABLED !== "true") {
       logger.info("[Round Scheduler] Disabled (ROUND_SCHEDULER_ENABLED is not 'true')");
@@ -14,14 +16,26 @@ class RoundSchedulerService {
     logger.info("[Round Scheduler] Starting round creation and close jobs");
 
     // Create new round every 4 minutes (1 min round + 3 min processing)
-    cron.schedule("0 */4 * * * *", async () => {
-      await this.createRound();
-    });
+    this.cronTasks.push(
+      cron.schedule("0 */4 * * * *", async () => {
+        await this.createRound();
+      }),
+    );
 
     // Close (lock) eligible rounds every 30 seconds
-    cron.schedule("*/30 * * * * *", async () => {
-      await this.closeEligibleRounds();
-    });
+    this.cronTasks.push(
+      cron.schedule("*/30 * * * * *", async () => {
+        await this.closeEligibleRounds();
+      }),
+    );
+  }
+
+  stop(): void {
+    for (const task of this.cronTasks) {
+      task.stop();
+    }
+    this.cronTasks = [];
+    logger.info("[Round Scheduler] Stopped");
   }
 
   private async createRound(): Promise<void> {

@@ -1,10 +1,12 @@
 import axios from 'axios';
+import logger from '../utils/logger';
 
 class PriceOracle {
   private static instance: PriceOracle;
   private price: number | null = null;
   private readonly COINGECKO_URL = 'https://api.coingecko.com/api/v3/simple/price?ids=stellar&vs_currencies=usd';
   private readonly POLLING_INTERVAL = 10000; // 10 seconds
+  private pollingInterval: ReturnType<typeof setInterval> | null = null;
 
   private constructor() {}
 
@@ -18,13 +20,21 @@ class PriceOracle {
   public startPolling(): void {
     // Initial fetch
     this.fetchPrice();
-    
+
     // Start polling interval
-    setInterval(() => {
+    this.pollingInterval = setInterval(() => {
       this.fetchPrice();
     }, this.POLLING_INTERVAL);
-    
-    console.log('Price Oracle polling started');
+
+    logger.info('Price Oracle polling started');
+  }
+
+  public stopPolling(): void {
+    if (this.pollingInterval) {
+      clearInterval(this.pollingInterval);
+      this.pollingInterval = null;
+      logger.info('Price Oracle polling stopped');
+    }
   }
 
   private async fetchPrice(): Promise<void> {
@@ -32,12 +42,12 @@ class PriceOracle {
       const response = await axios.get(this.COINGECKO_URL);
       if (response.data && response.data.stellar && response.data.stellar.usd) {
         this.price = response.data.stellar.usd;
-        console.log(`Fetched XLM price: $${this.price}`);
+        logger.info(`Fetched XLM price: $${this.price}`);
       } else {
-        console.warn('Invalid response structure from CoinGecko:', response.data);
+        logger.warn('Invalid response structure from CoinGecko:', response.data);
       }
     } catch (error: any) {
-      console.error('Error fetching XLM price:', error.message);
+      logger.error('Error fetching XLM price:', error.message);
       // Just log the error. Price remains old value if it exists, or null.
     }
   }

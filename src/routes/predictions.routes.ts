@@ -22,14 +22,12 @@ const router = Router();
  *             type: object
  *             properties:
  *               roundId: { type: string }
- *               userId: { type: string, description: User ID (currently required by the API body)" }
  *               amount: { type: number, minimum: 0 }
  *               side: { type: string, description: UP/DOWN (for UP_DOWN mode)" }
  *               priceRange: { type: string, description: Price range selection (for LEGENDS mode)" }
- *             required: [roundId, userId, amount]
+ *             required: [roundId, amount]
  *           example:
  *             roundId: "round-id"
- *             userId: "user-id"
  *             amount: 10
  *             side: "UP"
  *     responses:
@@ -53,8 +51,6 @@ const router = Router();
  *             examples:
  *               missingRoundId:
  *                 value: { error: "Round ID is required" }
- *               missingUserId:
- *                 value: { error: "User ID is required" }
  *               invalidAmount:
  *                 value: { error: "Invalid amount" }
  *               missingSideOrRange:
@@ -75,19 +71,16 @@ const router = Router();
  *           curl -X POST "$API_BASE_URL/api/predictions/submit" \\
  *             -H "Content-Type: application/json" \\
  *             -H "Authorization: Bearer $TOKEN" \\
- *             -d '{"roundId":"round-id","userId":"user-id","amount":10,"side":"UP"}'
+ *             -d '{"roundId":"round-id","amount":10,"side":"UP"}'
  */
 router.post('/submit', authenticateUser, async (req: Request, res: Response) => {
     try {
-        const { roundId, userId, amount, side, priceRange } = req.body;
+        const { roundId, amount, side, priceRange } = req.body;
+        const userId = req.user!.userId;
 
         // Validation
         if (!roundId) {
             return res.status(400).json({ error: 'Round ID is required' });
-        }
-
-        if (!userId) {
-            return res.status(400).json({ error: 'User ID is required' });
         }
 
         if (!amount || amount <= 0) {
